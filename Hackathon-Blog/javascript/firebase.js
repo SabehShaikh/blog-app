@@ -1,6 +1,12 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
-import { doc, setDoc, getFirestore, getDoc , updateDoc } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
+import {
+    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut,
+    reauthenticateWithCredential, EmailAuthProvider, updatePassword
+} from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
+import { doc, setDoc, getFirestore, getDoc, updateDoc,
+     collection, addDoc , serverTimestamp , query, where, getDocs,   } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-storage.js";
+
 const firebaseConfig = {
     apiKey: "AIzaSyBHO2psCdz8PwHkXtN293GEq5MhsZ02UD8",
     authDomain: "hackathon-9eef8.firebaseapp.com",
@@ -13,5 +19,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage();
 
-export { app, auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, doc, setDoc, db, getDoc , updateDoc };
+export {
+    app, auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, doc, setDoc, db, getDoc, updateDoc,
+    storage, ref, uploadBytesResumable, getDownloadURL,
+    reauthenticateWithCredential, EmailAuthProvider, updatePassword,
+    collection, addDoc, serverTimestamp , query, where, getDocs
+};

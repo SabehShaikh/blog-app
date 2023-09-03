@@ -358,7 +358,6 @@ input:focus~.input-border {
     bottom: 25px;
     right: 4px;
     text-align: center;
-    display: none;
     justify-content: center;
     align-items: center;
     box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
