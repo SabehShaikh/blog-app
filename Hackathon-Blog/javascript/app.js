@@ -2,7 +2,8 @@ import {
     auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut,
     doc, setDoc, db, getDoc, updateDoc, storage, ref, uploadBytesResumable, getDownloadURL,
     reauthenticateWithCredential, EmailAuthProvider, updatePassword,
-    collection, addDoc, serverTimestamp, query, where, getDocs,
+    collection, addDoc, serverTimestamp, query,
+    where, getDocs, deleteDoc,
 }
     from "./firebase.js"
 
@@ -26,7 +27,8 @@ const getCurrentUser = async (uid) => {
         if (location.pathname === "/blog.html") {
             fullName.innerHTML = docSnap.data().name;
 
-        } else if (location.pathname !== "/allblog.html") {
+        } // this below code is specific for profile
+        else if (location.pathname !== "/allblog.html" && location.pathname !== "/user.html") {
             fullName.value = docSnap.data().name;
             email.value = docSnap.data().email;
             userUid.value = docSnap.id;
@@ -61,17 +63,18 @@ const getAllBlogs = async () => {
                 <img class="blog-avatar m-0"
                 src="${doc.data().user.profile && doc.data().user.profile !== "undefined" ? doc.data().user.profile : "asset/user-circle.jpg"}"
                 alt="">
-
-                    <span class="d-flex flex-column justify-content-end">
-                        <h5 class="card-title mb-3">${doc.data().title}</h5>
-                        <h6 class="card-subtitle text-body-secondary"> ${doc.data().user.name}  - ${doc.data().timestamp.toDate().toDateString()}</h6>
+                <span class="d-flex flex-column justify-content-end">
+                <h5 class="card-title mb-3">${doc.data().user.name}</h5>
+                        <h6 class="card-subtitle text-body-secondary"> ${doc.data().timestamp.toDate().toDateString()}</h6>
 
                     </span>
                 </div>
                 <div class="card-body">
+                <h5 class="card-title mb-3">${doc.data().title}</h5>
+
                     <p class="card-text"> ${doc.data().description}</p>
-                    <a href="javascript:void(0)" class="card-link seeAll" onclick="deleteBlog('${doc.id}')">Delete</a>
-                    <a href="javascript:void(0)" class="card-link seeAll">Edit</a>
+
+                    <a href="user.html?user='${doc.data().uid}'" class="card-link seeAll" >View all blogs</a>
                 </div>
             </div>
         </div>
@@ -84,6 +87,8 @@ const getAllBlogs = async () => {
 
 const getCurrentUserBlogs = async (uid) => {
     const blogArea = document.getElementById("my-blogs")
+
+    blogArea.innerHTML = "";
     const q = query(collection(db, "blogs"), where("uid", "==", uid));
 
     const querySnapshot = await getDocs(q);
@@ -108,7 +113,7 @@ const getCurrentUserBlogs = async (uid) => {
                     <div class="card-body">
                         <p class="card-text"> ${doc.data().description}</p>
                         <a href="javascript:void(0)" class="card-link seeAll" onclick="deleteBlog('${doc.id}')">Delete</a>
-                        <a href="javascript:void(0)" class="card-link seeAll">Edit</a>
+                        <a href="javascript:void(0)" class="card-link seeAll" onclick="editBlog('${doc.id}', '${doc.data().title}' , '${doc.data().description}')">Edit</a>
                     </div>
                 </div>
             </div>
@@ -131,7 +136,7 @@ onAuthStateChanged(auth, (user) => {
             getAllBlogs()
         }
 
-        if (location.pathname !== '/allblog.html' && location.pathname !== '/blog.html' && location.pathname !== '/profile.html' && flag) {
+        if (location.pathname !== '/user.html' && location.pathname !== '/allblog.html' && location.pathname !== '/blog.html' && location.pathname !== '/profile.html' && flag) {
             location.href = "blog.html";
         }
 
@@ -389,6 +394,7 @@ const submitBlog = async () => {
         uid: currentUser.uid,
         user: userData.data()
     });
+    getCurrentUserBlogs(currentUser.uid)
     title.value = "";
     textarea.value = "";
     spiner.style.display = "none";
@@ -404,4 +410,116 @@ const submitBlog = async () => {
 const postBlog = document.getElementById("postBlog");
 
 postBlog && postBlog.addEventListener('click', submitBlog)
+
+
+const deleteBlog = async (id) => {
+    const currentUser = auth.currentUser;
+    spiner.style.display = "flex"
+    await deleteDoc(doc(db, "blogs", id));
+    Swal.fire(
+        'Good job!',
+        'Blog Deleted!',
+        'success'
+    )
+    spiner.style.display = "none";
+    getCurrentUserBlogs(currentUser.uid)
+}
+
+const updateModal = document.getElementById("updateModal")
+const updateTitle = document.getElementById("update-title")
+const updateTextArea = document.getElementById("update-textarea")
+let updateID = "";
+
+const editBlog = (id, title, description) => {
+    console.log("id, title, description", id, title, description)
+
+    updateID = id;
+    updateTitle.value = title;
+    updateTextArea.value = description;
+    updateModal.style.display = "block"
+}
+
+const cancelBtn = document.getElementById('cancelBtn');
+
+cancelBtn && cancelBtn.addEventListener('click', () => {
+    updateModal.style.display = "none"
+
+})
+
+const updateBlog = document.getElementById("updateBlog");
+
+updateBlog && updateBlog.addEventListener("click", async () => {
+
+
+    const currentUser = auth.currentUser;
+    spiner.style.display = "flex"
+
+    console.log(updateTitle.value, updateTextArea.value, updateID)
+
+    const ref = doc(db, "blogs", updateID);
+
+    // Set the "capital" field of the city 'DC'
+    await updateDoc(ref, {
+        title: updateTitle.value,
+        description: updateTextArea.value,
+    });
+    spiner.style.display = "none"
+    updateID = "";
+    updateModal.style.display = "none"
+    getCurrentUserBlogs(currentUser.uid)
+    Swal.fire(
+        'Good job!',
+        'Blog Updated!',
+        'success'
+    )
+})
+
+const getUserBlogs = async () => {
+    console.log("getUserBlogs function is called.");
+    const urlParams = new URLSearchParams(location.search);
+    const user = urlParams.get('user');
+
+    const blogArea = document.getElementById("user-blog-add")
+
+
+
+    blogArea.innerHTML = "";
+    const q = query(collection(db, "blogs"), where("uid", "==", user));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+        // doc.data() is never undefined for query doc snapshots
+        blogArea.innerHTML += `
+            <div class="mt-2 mb-2">
+            <div class="head-blog mt-2">
+                <div class="card border border-secondary-subtle rounded py-2">
+                    <div class="card-header d-flex gap-4">
+                    
+                    <img class="blog-avatar m-0"
+                    src="${doc.data().user.profile && doc.data().user.profile !== "undefined" ? doc.data().user.profile : "asset/user-circle.jpg"}"
+                    alt="">
+
+                        <span class="d-flex flex-column justify-content-end">
+                            <h5 class="card-title mb-3">${doc.data().title}</h5>
+                            <h6 class="card-subtitle text-body-secondary"> ${doc.data().user.name}  - ${doc.data().timestamp.toDate().toDateString()}</h6>
+
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text"> ${doc.data().description}</p>
+                        <a href="javascript:void(0)" class="card-link seeAll" onclick="deleteBlog('${doc.id}')">Delete</a>
+                        <a href="javascript:void(0)" class="card-link seeAll" onclick="editBlog('${doc.id}', '${doc.data().title}' , '${doc.data().description}')">Edit</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+         `
+    });
+}
+
+if (location.pathname === "/user.html") {
+    console.log("User page is detected.");
+    getUserBlogs();
+}
+window.deleteBlog = deleteBlog;
+window.editBlog = editBlog;
 

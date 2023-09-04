@@ -3,8 +3,10 @@ import {
     getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut,
     reauthenticateWithCredential, EmailAuthProvider, updatePassword
 } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
-import { doc, setDoc, getFirestore, getDoc, updateDoc,
-     collection, addDoc , serverTimestamp , query, where, getDocs,   } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
+import {
+    doc, setDoc, getFirestore, getDoc, updateDoc,
+    collection, addDoc, serverTimestamp, query, where, getDocs, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -25,5 +27,5 @@ export {
     app, auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, doc, setDoc, db, getDoc, updateDoc,
     storage, ref, uploadBytesResumable, getDownloadURL,
     reauthenticateWithCredential, EmailAuthProvider, updatePassword,
-    collection, addDoc, serverTimestamp , query, where, getDocs
+    collection, addDoc, serverTimestamp, query, where, getDocs, deleteDoc, 
 };
